@@ -5,6 +5,7 @@ from django.forms import ModelForm
 import pika
 import json
 
+
 def ask_pika(request):
     token = request.COOKIES.get('token')
 
@@ -13,14 +14,37 @@ def ask_pika(request):
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672, '/', credentials))
     channel = connection.channel()
 
+    result = channel.queue_declare(queue='', exclusive=True)
+    callback_queue = result.method.queue
+
+    x_response = None
+
+    def on_response(ch, method, props, body):
+        print("on_response", body)
+        x_response = body
+
+    channel.basic_consume(
+        queue=callback_queue,
+        on_message_callback=on_response,
+        auto_ack=True)
+
     channel.queue_declare(queue='check_auth')
 
     channel.basic_publish(
         exchange='',
         routing_key='check_auth',
+        properties=pika.BasicProperties(
+            reply_to=callback_queue
+        ),
         body=json.dumps({'token': token})
     )
-    return None
+
+    # THIS IS THE PLACE
+    # while x_response is None:
+    #     connection.process_data_events(time_limit=None)
+
+    return x_response
+
 
 def index(request):
     ask_pika(request)

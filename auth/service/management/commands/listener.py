@@ -5,9 +5,16 @@ class Command(BaseCommand):
     help = 'Runs rabbit listener'
 
     def callback(self, ch, method, properties, body):
-        print("RabbitConsuming: callback")
-        print(ch, method, properties, body)
+        self.stderr.write(f'RabbitConsuming: callback {str(body)}')
+        self.stderr.write(f'callback {str(properties)}')
+        # self.stderr.write(body)
         # do something
+        ch.basic_publish(exchange='',
+                        routing_key=properties.reply_to,
+                        # properties=pika.BasicProperties(correlation_id = \
+                        #                                     properties.correlation_id),
+                        body=str("userOK"))
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         pass
 
     @staticmethod
@@ -16,7 +23,7 @@ class Command(BaseCommand):
         return pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672, '/', credentials))
 
     def handle(self, *args, **kwargs):
-        print("RabbitConsuming: start")
+        self.stderr.write("RabbitConsuming: start")
         connection = self._get_connection()
         channel = connection.channel()
 

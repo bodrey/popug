@@ -18,8 +18,8 @@ services:
     ports:
       - 8000:8000
     restart: always
-    command: python /app/manage.py listener
-    # command: python /app/manage.py runserver 0.0.0.0:8000
+    # command: python /app/manage.py listener
+    command: bash -c "python /app/manage.py listener & python /app/manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./auth:/app
 
