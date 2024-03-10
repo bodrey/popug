@@ -5,6 +5,25 @@ from django.forms import ModelForm
 import pika
 import json
 import sys
+from jsonschema import validate
+
+schema_task_to_auth = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type" : "object",
+    "properties": {
+        "token": { "type": ["string", "null"] },
+    },
+    "required": ["token"]
+}
+
+schema_auth_to_task = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type" : "object",
+    "properties": {
+        "user_id": { "type": ["string", "null"] },
+    },
+    "required": ["user_id"]
+}
 
 def meow(string = 'Meow!'):
     print('', file=sys.stderr)
@@ -37,13 +56,18 @@ def ask_pika(request):
 
     channel.queue_declare(queue='check_auth')
 
+    message = {'token': token}
+
+    validate(instance=message, schema=schema_task_to_auth)
+    meow('schema_task_to_auth is good')
+
     channel.basic_publish(
         exchange='',
         routing_key='check_auth',
         properties=pika.BasicProperties(
             reply_to=callback_queue
         ),
-        body=json.dumps({'token': token})
+        body= json.dumps(message)
     )
 
     # THIS IS THE PLACE
@@ -61,8 +85,9 @@ def index(request):
         return response
     
     pika_response = json.loads(ask_pika(request))
-
-    meow(pika_response['user_id'])
+    
+    validate(instance=pika_response, schema=schema_auth_to_task)
+    meow('schema_auth_to_task is good')
 
     if pika_response['user_id']:
         pass

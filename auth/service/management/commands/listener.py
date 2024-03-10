@@ -5,12 +5,34 @@ from service.views import *
 import pika
 import sys
 import json
+from jsonschema import validate
+
+schema_task_to_auth = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type" : "object",
+    "properties": {
+        "token": { "type": ["string", "null"] },
+    },
+    "required": ["token"]
+}
+
+schema_auth_to_task = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type" : "object",
+    "properties": {
+        "user_id": { "type": ["string", "null"] },
+    },
+    "required": ["user_id"]
+}
 
 def check_auth(data):
-    user = User.objects.filter(token = data['token']).first()
-    if user:
-        return user.user_id
-    else:
+    try:
+        user = User.objects.filter(token = data['token']).first()
+        if user:
+            return user.user_id
+        else:
+            return None
+    except:
         return None
     
 class Command(BaseCommand):
@@ -23,14 +45,18 @@ class Command(BaseCommand):
 
         data = json.loads(body)
 
-        ch.basic_publish(exchange='',
-            routing_key=properties.reply_to,
-            # properties=pika.BasicProperties(correlation_id = \
-            #                                     properties.correlation_id),
-            body=json.dumps({'user_id': check_auth(data)})
-        )
+        try:
+            validate(instance=data, schema=schema_task_to_auth)
+            meow('schema_task_to_auth is good')
+            ch.basic_publish(exchange='',
+                routing_key=properties.reply_to,
+                body=json.dumps({'user_id': check_auth(data)})
+            )
+        except:
+            meow(schema_task_to_auth)
+            meow(data)
+            meow('schema_task_to_auth is NOT')
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        pass
 
     @staticmethod
     def _get_connection():

@@ -2,7 +2,6 @@
 # import pika
 # from django.conf import settings
 
-
 # class RabbitConsuming(threading.Thread):
 #     def callback(self, ch, method, properties, body):
 #         print("RabbitConsuming: callback")
