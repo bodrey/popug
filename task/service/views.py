@@ -4,7 +4,12 @@ from .models import *
 from django.forms import ModelForm
 import pika
 import json
+import sys
 
+def meow(string = 'Meow!'):
+    print('', file=sys.stderr)
+    print(string, file=sys.stderr)
+    print('', file=sys.stderr)
 
 def ask_pika(request):
     token = request.COOKIES.get('token')
@@ -17,10 +22,12 @@ def ask_pika(request):
     result = channel.queue_declare(queue='', exclusive=True)
     callback_queue = result.method.queue
 
+    global x_response
     x_response = None
 
     def on_response(ch, method, props, body):
-        print("on_response", body)
+        # meow(str(body))
+        global x_response
         x_response = body
 
     channel.basic_consume(
@@ -40,14 +47,28 @@ def ask_pika(request):
     )
 
     # THIS IS THE PLACE
-    # while x_response is None:
-    #     connection.process_data_events(time_limit=None)
+    while x_response is None:
+        connection.process_data_events(time_limit=None)
 
     return x_response
 
 
 def index(request):
-    ask_pika(request)
+    token = request.GET.get('set_token')
+    if token:
+        response = redirect('http://localhost:8010/') # replace redirect with HttpResponse or render
+        response.set_cookie('token', token, max_age=1000)
+        return response
+    
+    pika_response = json.loads(ask_pika(request))
+
+    meow(pika_response['user_id'])
+
+    if pika_response['user_id']:
+        pass
+    else:
+        return redirect('http://localhost:8000/login?back=http://localhost:8010/')
+
     tasks = Task.objects.all()
     context = {
         'tasks': tasks

@@ -3,7 +3,7 @@ from django.db import models
 class User(models.Model):
     name = models.CharField('Имя', max_length=200)
     password = models.CharField('Пароль', max_length=200)
-    jwt = models.TextField('JWT-Токен', blank=True)
+    token = models.TextField('JWT-Токен', blank=True)
     email = models.EmailField(verbose_name="E-mail", blank=True)
     ROLE_CHOICES = [
         ('admin','Админ'),

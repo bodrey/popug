@@ -14,5 +14,3 @@ class Task(models.Model):
     # user_uuid = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Попуг")
     # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.CharField('Попуг id', max_length=200, blank=True)
-
-# class User

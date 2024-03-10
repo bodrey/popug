@@ -2,6 +2,7 @@ version: '3'
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
+    restart: unless-stopped
     ports:
         - 5672:5672
         - 15672:15672
@@ -11,15 +12,24 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   auth:
     build:
       context: auth
     ports:
       - 8000:8000
-    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
     # command: python /app/manage.py listener
-    command: bash -c "python /app/manage.py listener & python /app/manage.py runserver 0.0.0.0:8000"
+    # command: bash -c "python /app/manage.py listener & python /app/manage.py runserver 0.0.0.0:8000"
+    command: bash -c "python /app/manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./auth:/app
 
@@ -28,7 +38,10 @@ services:
       context: task
     ports:
       - 8010:8010
-    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
     command: python /app/manage.py runserver 0.0.0.0:8010
     volumes:
       - ./task:/app

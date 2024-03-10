@@ -1,19 +1,34 @@
 from django.core.management.base import BaseCommand
+from django.utils import autoreload
+# from service.models import *
+from service.views import *
 import pika
+import sys
+import json
 
+def check_auth(data):
+    user = User.objects.filter(token = data['token']).first()
+    if user:
+        return user.user_id
+    else:
+        return None
+    
 class Command(BaseCommand):
     help = 'Runs rabbit listener'
 
     def callback(self, ch, method, properties, body):
-        self.stderr.write(f'RabbitConsuming: callback {str(body)}')
-        self.stderr.write(f'callback {str(properties)}')
-        # self.stderr.write(body)
-        # do something
+        self.stderr.write(f'RabbitConsuming: callback {str(json.loads(body))}')
+        # self.stderr.write(f'callback {str(properties)}')
+        # self.stderr.write(str(body))
+
+        data = json.loads(body)
+
         ch.basic_publish(exchange='',
-                        routing_key=properties.reply_to,
-                        # properties=pika.BasicProperties(correlation_id = \
-                        #                                     properties.correlation_id),
-                        body=str("userOK"))
+            routing_key=properties.reply_to,
+            # properties=pika.BasicProperties(correlation_id = \
+            #                                     properties.correlation_id),
+            body=json.dumps({'user_id': check_auth(data)})
+        )
         ch.basic_ack(delivery_tag=method.delivery_tag)
         pass
 
@@ -23,6 +38,7 @@ class Command(BaseCommand):
         return pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672, '/', credentials))
 
     def handle(self, *args, **kwargs):
+        # autoreload.run_with_reloader(self)
         self.stderr.write("RabbitConsuming: start")
         connection = self._get_connection()
         channel = connection.channel()
@@ -33,3 +49,5 @@ class Command(BaseCommand):
         channel.basic_consume('check_auth', self.callback)
 
         channel.start_consuming()
+
+ 

@@ -1,12 +1,8 @@
-<h1>Users</h1>
-{% if users %}
-    <h2>Users list</h2>
-    <ul>
-    {% for user in users %}
-        <li>
-            <a href="/{{ user.id }}/edit">{{ user.name }}</a>
-        </li>
+<h1>User login</h1>
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        {{ field.label_tag }} {{ field }}<br><br>
     {% endfor %}
-    </ul>
-{% endif %}
-<a href="/create">Create user</a>
+<input type="submit" style="cursor: pointer;" value="Войти">
+</form>
