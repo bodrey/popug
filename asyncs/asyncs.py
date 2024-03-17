@@ -1,11 +1,14 @@
 import sys
 from jsonschema import validate
 
-
 def meow(string = 'Meow!'):
     print('', file=sys.stderr)
     print(string, file=sys.stderr)
     print('', file=sys.stderr)
+
+    print('')
+    print(string)
+    print('')
 
 schema_task_to_auth = {
     "$schema": "http://json-schema.org/draft-07/schema#",
