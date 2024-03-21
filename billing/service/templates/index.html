@@ -1,0 +1,12 @@
+<h1>Billing</h1>
+{% comment %} {% if tasks %}
+    <h2>Task list</h2>
+    <ul>
+    {% for task in tasks %}
+        <li>
+            <a href="/{{ task.id }}/edit">{{ task.name }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
+<a href="/create">Create task</a> {% endcomment %}

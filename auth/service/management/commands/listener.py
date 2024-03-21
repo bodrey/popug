@@ -35,6 +35,7 @@ class Command(BaseCommand):
                 routing_key=properties.reply_to,
                 body=json.dumps({'user_id': check_auth(data)})
             )
+        
         except:
             meow(schema_task_to_auth)
             meow(data)
