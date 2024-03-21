@@ -27,7 +27,7 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
-    command: python /app/manage.py listener
+    # command: python /app/manage.py listener
     command: bash -c "python /app/manage.py listener & python /app/manage.py runserver 0.0.0.0:8000 & watchfiles --filter python 'python /app/manage.py listener' app/service/management/commands"
     # command: bash -c "python /app/manage.py runserver 0.0.0.0:8000"
     volumes:
