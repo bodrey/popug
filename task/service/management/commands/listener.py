@@ -7,16 +7,6 @@ import sys
 import json
 from jsonschema import validate
 from asyncs import *
-
-def check_auth(data):
-    try:
-        user = User.objects.filter(token = data['token']).first()
-        if user:
-            return user.user_id
-        else:
-            return None
-    except:
-        return None
     
 class Command(BaseCommand):
     help = 'Runs rabbit listener'
@@ -30,12 +20,11 @@ class Command(BaseCommand):
 
         try:
             validate(instance=data, schema=schema_task_to_auth)
-            meow('test 3 schema_task_to_auth is good')
-            ch.basic_publish(exchange='',
-                routing_key=properties.reply_to,
-                body=json.dumps({'user_id': check_auth(data)})
-            )
-        
+            meow('schema_task_to_auth is good')
+            # ch.basic_publish(exchange='',
+            #     routing_key=properties.reply_to,
+            #     body=json.dumps({'user_id': check_auth(data)})
+            # )
         except:
             meow(schema_task_to_auth)
             meow(data)
